@@ -2,8 +2,10 @@
 @import url('./reset.css');
 
 @import url('./main.css');
+@import url('./mins.css');
 @import url('./dots.css');
 @import url('./time.css');
 @import url('./timer.css');
 @import url('./buttons.css');
 @import url('./repeat.css');
+@import url('./pomodoro_count.css');
