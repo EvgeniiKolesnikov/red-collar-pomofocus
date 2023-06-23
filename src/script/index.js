@@ -1,8 +1,8 @@
 // - Создать таймер, который будет отсчитывать 25 минут работы и 5 минут отдыха (15 минут для длинных перерывов).
 // - Предоставить пользователю возможность приостанавливать или сбрасывать таймер.
 // - Все решения по дизайну остаются за разработчиком и при оценке учитываться не будут.
-
 // - Опционально: Добавить возможность настройки количества помодоро и времени короткого и длинного перерывов.
+
 // - Опционально: Добавить возможность добавления, удаления и редактирования задач для каждого помодоро.
 // - Опционально: Добавить возможность отметить задачу выполненной и переключаться на следующую задачу.
 
@@ -14,18 +14,15 @@ const colorRed = '#ba4949';
 const colorGreen = '#38858a';
 const colorBlue = '#397097';
 
-const pomodoroTime = 1500; // 25
-const shortTime = 300; // 5
-const longTime = 900; // 15
+const pomodoroTimeDefault = 25;
+const shortTimeDefault = 5;
+const longTimeDefault = 15;
+const pomodoroCountDefault = 4;
 
-// for tests
-// const pomodoroTime = 5;
-// const shortTime = 3;
-// const longTime = 4;
-
-const pomodoroCount = 4;
-
-let time = pomodoroTime;
+let pomodoroTime = 25;
+let shortTime = 5;
+let longTime = 15;
+let pomodoroCount = pomodoroCountDefault;
 
 let mode = 'pomodoro'; // pomodoro || short || long
 let pomodoroNumber = pomodoroCount;
@@ -33,10 +30,13 @@ let decrement = 1;
 
 let onPlay = false;
 let onEndTimer = false;
-let autoRepeat = false;
+let autoRepeat = true;
 
 // =============== functions ==============================
 const add0 = (digit) => digit.toString().padStart(2, '0');
+const getTime = (mins) => Math.floor(mins * 60);
+
+let time = getTime(pomodoroTime);
 
 const setActiveButon = () => {
   const buttons = Array.from(document.querySelector('.buttons-top').children);
@@ -49,15 +49,16 @@ const setActiveButon = () => {
 
 const setColor = () => {
   const main = document.querySelector('.main');
+  getTimes();
   if (mode === 'pomodoro') {
     main.style.backgroundColor = colorRed;
-    time = pomodoroTime;
+    time = getTime(pomodoroTime);
   } else if (mode === 'short') {
     main.style.backgroundColor = colorGreen;
-    time = shortTime;
+    time = getTime(shortTime);
   } else {
     main.style.backgroundColor = colorBlue;
-    time = longTime;
+    time = getTime(longTime);
   }
 };
 
@@ -116,10 +117,14 @@ const toggleMode = (modeName) => {
 };
 
 const setNextRound = () => {
-  if (mode === 'pomodoro' && pomodoroNumber === 0) {
+  if (pomodoroNumber > pomodoroCount) {
+    pomodoroNumber = pomodoroCount;
+  }
+
+  if (mode === 'pomodoro' && pomodoroNumber <= 1) {
     pomodoroNumber = pomodoroCount;
     toggleMode('long');
-  } else if (mode === 'pomodoro' && pomodoroNumber > 0) {
+  } else if (mode === 'pomodoro' && pomodoroNumber > 1) {
     pomodoroNumber -= 1;
     toggleMode('short');
   } else if (mode === 'short' || mode === 'long') {
@@ -133,6 +138,31 @@ const toggleRepeat = (e) => {
   autoRepeat
     ? e.target.classList.add('repeat-active')
     : e.target.classList.remove('repeat-active');
+};
+
+const textEdit = (e) => {
+  let text = e.target;
+  text.contentEditable = true;
+  text.focus();
+  text.addEventListener('keydown', (e) => textBlur(e));
+};
+
+const textBlur = (e) => {
+  if (e.key === 'Enter' || e.key === 'Escape') {
+    e.target.contentEditable = false;
+  }
+};
+
+const getTimes = () => {
+  const min_pomodoro = document.querySelector('.min_pomodoro');
+  const min_short = document.querySelector('.min_short');
+  const min_long = document.querySelector('.min_long');
+  const pomodoro_count = document.querySelector('.pomodoro_count');
+
+  pomodoroTime = +min_pomodoro.textContent || pomodoroTimeDefault;
+  shortTime = +min_short.textContent || shortTimeDefault;
+  longTime = +min_long.textContent || longTimeDefault;
+  pomodoroCount = +pomodoro_count.textContent || pomodoroCountDefault;
 };
 
 const button_pomodoro = document.querySelector('.button_pomodoro');
@@ -153,5 +183,15 @@ button_reset.addEventListener('click', () => resetTimer());
 
 const repeat = document.querySelector('.repeat');
 repeat.addEventListener('click', (e) => toggleRepeat(e));
+
+const min_pomodoro = document.querySelector('.min_pomodoro');
+const min_short = document.querySelector('.min_short');
+const min_long = document.querySelector('.min_long');
+const pomodoro_count = document.querySelector('.pomodoro_count');
+
+min_pomodoro.addEventListener('click', (e) => textEdit(e));
+min_short.addEventListener('click', (e) => textEdit(e));
+min_long.addEventListener('click', (e) => textEdit(e));
+pomodoro_count.addEventListener('click', (e) => textEdit(e));
 
 resetTimer();
