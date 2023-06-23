@@ -7,7 +7,7 @@
 // - Опционально: Добавить возможность отметить задачу выполненной и переключаться на следующую задачу.
 
 // =============== variables ==============================
-const alarm = new Audio('../src/sound/alarm.mp3');
+const alarm = new Audio('./src/sound/alarm.mp3');
 alarm.volume = 0.5;
 
 const colorRed = '#ba4949';
