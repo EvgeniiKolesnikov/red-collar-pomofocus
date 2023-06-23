@@ -1,0 +1,50 @@
+.repeat {
+  position: absolute;
+  left: 11px;
+  bottom: 22px;
+  width: 30px;
+  height: 30px;
+
+  left: 221px;
+  top: 68px;
+  width: 40px;
+  height: 40px;
+
+  background-size: cover;
+  background-image: url('../svg/repeat1.svg');
+  background-image: url('../svg/repeat2.svg');
+  background-image: url('../svg/repeat4.svg');
+  background-image: url('../svg/repeat3.svg');
+
+  transition: 0.4s;
+  cursor: pointer;
+  opacity: 0.4;
+  transform: scale(-1, 1);
+}
+
+@keyframes repeat {
+  from {
+    transform: scale(-1, 1) rotate(0deg);
+  }
+  to {
+    transform: scale(-1, 1) rotate(-360deg);
+  }
+}
+
+.repeat:hover {
+  transition: 0.4s;
+  animation-duration: 1s;
+  animation-name: repeat;
+  animation-delay: 0s;
+  opacity: 0.7;
+}
+
+.repeat:active {
+  transition: 0.4s;
+  transform: scale(-0.9, 0.9);
+}
+
+.repeat-active {
+  transition: 0.4s;
+  opacity: 1;
+}

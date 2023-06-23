@@ -2,6 +2,14 @@
 // - Предоставить пользователю возможность приостанавливать или сбрасывать таймер.
 // - Все решения по дизайну остаются за разработчиком и при оценке учитываться не будут.
 
+// - Опционально: Добавить возможность настройки количества помодоро и времени короткого и длинного перерывов.
+// - Опционально: Добавить возможность добавления, удаления и редактирования задач для каждого помодоро.
+// - Опционально: Добавить возможность отметить задачу выполненной и переключаться на следующую задачу.
+
+// =============== variables ==============================
+const alarm = new Audio('../src/sound/alarm.mp3');
+alarm.volume = 0.5;
+
 const colorRed = '#ba4949';
 const colorGreen = '#38858a';
 const colorBlue = '#397097';
@@ -10,95 +18,140 @@ const pomodoroTime = 1500; // 25
 const shortTime = 300; // 5
 const longTime = 900; // 15
 
-let time = pomodoroTime;
-let timer = null;
+// for tests
+// const pomodoroTime = 5;
+// const shortTime = 3;
+// const longTime = 4;
 
-let mode = 'pomodoro'; // short || long
-let numberShort = 0;
+const pomodoroCount = 4;
+
+let time = pomodoroTime;
+
+let mode = 'pomodoro'; // pomodoro || short || long
+let pomodoroNumber = pomodoroCount;
+let decrement = 1;
 
 let onPlay = false;
 let onEndTimer = false;
+let autoRepeat = false;
 
-const add0 = (digit) => {
-  return digit.toString().padStart(2, '0');
+// =============== functions ==============================
+const add0 = (digit) => digit.toString().padStart(2, '0');
+
+const setActiveButon = () => {
+  const buttons = Array.from(document.querySelector('.buttons-top').children);
+  buttons.forEach((elem) =>
+    elem.classList.contains('button_' + mode)
+      ? elem.classList.add('button-active')
+      : elem.classList.remove('button-active')
+  );
 };
 
 const setColor = () => {
   const main = document.querySelector('.main');
   if (mode === 'pomodoro') {
     main.style.backgroundColor = colorRed;
-  } else if (mode === 'short') {
-    main.style.backgroundColor = colorGreen;
-  } else {
-    main.style.backgroundColor = colorBlue;
-  }
-};
-
-const startTime = () => {
-  if (!onPlay) {
-    onPlay = true;
-    updateTime();
-  }
-};
-
-const pauseTime = () => {
-  if (onPlay) {
-    onPlay = false;
-    refreshTime();
-  }
-};
-
-const resetTime = () => {
-  onPlay = false;
-  if (mode === 'pomodoro') {
     time = pomodoroTime;
   } else if (mode === 'short') {
+    main.style.backgroundColor = colorGreen;
     time = shortTime;
   } else {
+    main.style.backgroundColor = colorBlue;
     time = longTime;
   }
-  refreshTime();
 };
 
 const refreshTime = () => {
   const timeElem = document.querySelector('.time');
   const sec = time % 60;
   const min = Math.floor(time / 60);
-  timeElem.textContent = `${add0(min)}:${add0(sec)}`;
+  timeElem.textContent = `${add0(min)} ${add0(sec)}`;
+};
+
+const endTimer = () => {
+  time = 0;
+  decrement = 0;
+  onEndTimer = true;
+  alarm.play();
+  setTimeout(setNextRound, 2000);
 };
 
 const updateTime = () => {
   if (time <= 0) {
-    time = 0;
-    onEndTimer = true;
+    endTimer();
   }
+  time -= decrement;
   refreshTime();
-  time -= 1;
-  if (onPlay && !onEndTimer) setTimeout(updateTime, 1000);
+  if (onPlay && !onEndTimer) {
+    setTimeout(updateTime, 1000);
+  }
 };
 
-const setMode = (modeName) => {
-  onPlay = false;
-  mode = modeName;
-  resetTime();
+const startTimer = () => {
+  if (!onPlay) {
+    onPlay = true;
+    updateTime();
+    decrement = 1;
+  }
+};
+
+const pauseTimer = () => {
+  if (onPlay) {
+    decrement = 0;
+    onPlay = false;
+  }
+};
+
+const resetTimer = () => {
+  pauseTimer();
   setColor();
+  setActiveButon();
   refreshTime();
 };
 
-const button_start = document.querySelector('.button_start');
-const button_pause = document.querySelector('.button_pause');
-const button_reset = document.querySelector('.button_reset');
+const toggleMode = (modeName) => {
+  mode = modeName;
+  onEndTimer = false;
+  resetTimer();
+};
 
-button_start.addEventListener('click', () => startTime());
-button_pause.addEventListener('click', () => pauseTime());
-button_reset.addEventListener('click', () => resetTime());
+const setNextRound = () => {
+  if (mode === 'pomodoro' && pomodoroNumber === 0) {
+    pomodoroNumber = pomodoroCount;
+    toggleMode('long');
+  } else if (mode === 'pomodoro' && pomodoroNumber > 0) {
+    pomodoroNumber -= 1;
+    toggleMode('short');
+  } else if (mode === 'short' || mode === 'long') {
+    toggleMode('pomodoro');
+  }
+  autoRepeat && startTimer();
+};
+
+const toggleRepeat = (e) => {
+  autoRepeat = !autoRepeat;
+  autoRepeat
+    ? e.target.classList.add('repeat-active')
+    : e.target.classList.remove('repeat-active');
+};
 
 const button_pomodoro = document.querySelector('.button_pomodoro');
 const button_short = document.querySelector('.button_short');
 const button_long = document.querySelector('.button_long');
 
-button_pomodoro.addEventListener('click', () => setMode('pomodoro'));
-button_short.addEventListener('click', () => setMode('short'));
-button_long.addEventListener('click', () => setMode('long'));
+button_pomodoro.addEventListener('click', () => toggleMode('pomodoro'));
+button_short.addEventListener('click', () => toggleMode('short'));
+button_long.addEventListener('click', () => toggleMode('long'));
 
-setColor();
+const button_start = document.querySelector('.button_start');
+const button_pause = document.querySelector('.button_pause');
+const button_reset = document.querySelector('.button_reset');
+
+button_start.addEventListener('click', () => startTimer());
+button_pause.addEventListener('click', () => pauseTimer());
+button_reset.addEventListener('click', () => resetTimer());
+
+const repeat = document.querySelector('.repeat');
+repeat.addEventListener('click', (e) => toggleRepeat(e));
+
+resetTimer();
